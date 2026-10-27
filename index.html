@@ -1,0 +1,549 @@
+<title>Protective Case CAD Workflow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+
+<style>
+/* Layout: vertical step flow, quick-ref strip at top */
+:root {
+  --bg:          #F2F6FB;
+  --surface:     #FFFFFF;
+  --surface-alt: #E8EEF7;
+  --fg:          #192A3B;
+  --fg-2:        #4C6378;
+  --accent:      #175FA0;
+  --accent-pale: #DBE8F6;
+  --amber:       #A05200;
+  --amber-pale:  #FFF0DA;
+  --green:       #1A6638;
+  --green-pale:  #E2F4EC;
+  --rule:        #C8D5E2;
+  --dim:         #C2D1DF;
+  --mono:        'IBM Plex Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:          #0C1A27;
+    --surface:     #132030;
+    --surface-alt: #1A2D3F;
+    --fg:          #DDE8F2;
+    --fg-2:        #7095B4;
+    --accent:      #4BA6DC;
+    --accent-pale: #0B2035;
+    --amber:       #EFA030;
+    --amber-pale:  #221200;
+    --green:       #4CC87A;
+    --green-pale:  #0B2018;
+    --rule:        #1E3348;
+    --dim:         #1E3348;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:          #0C1A27;
+  --surface:     #132030;
+  --surface-alt: #1A2D3F;
+  --fg:          #DDE8F2;
+  --fg-2:        #7095B4;
+  --accent:      #4BA6DC;
+  --accent-pale: #0B2035;
+  --amber:       #EFA030;
+  --amber-pale:  #221200;
+  --green:       #4CC87A;
+  --green-pale:  #0B2018;
+  --rule:        #1E3348;
+  --dim:         #1E3348;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding-block: 2rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* ── Header ── */
+.page-header {
+  max-width: 800px;
+  margin: 0 auto 1.5rem;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.4rem;
+}
+h1 {
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: balance;
+  margin: 0 0 0.4rem;
+}
+.page-sub {
+  color: var(--fg-2);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Quick Reference Strip ── */
+.ref-strip {
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+}
+.ref-strip h2 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin: 0 0 0.75rem;
+}
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+.ref-item { min-width: 0; }
+.ref-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  display: block;
+  margin-bottom: 0.1rem;
+}
+.ref-val {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  display: block;
+}
+.ref-note {
+  font-size: 0.72rem;
+  color: var(--fg-2);
+  display: block;
+  margin-top: 0.1rem;
+}
+
+/* ── Steps ── */
+.steps {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.step {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 0 1rem;
+  padding-block: 1.4rem;
+  border-bottom: 1px solid var(--rule);
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+  line-height: 1;
+  padding-top: 0.15rem;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+.step-body { min-width: 0; }
+.step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: var(--fg);
+}
+.step-phase {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin: 0 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.step-phase::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  background: var(--rule);
+  border-radius: 1px;
+}
+p { margin: 0 0 0.6rem; font-size: 0.9rem; color: var(--fg-2); }
+p:last-child { margin-bottom: 0; }
+p strong { color: var(--fg); font-weight: 600; }
+
+ul, ol {
+  margin: 0.4rem 0 0.6rem;
+  padding-left: 1.3rem;
+  font-size: 0.875rem;
+  color: var(--fg-2);
+}
+li { margin-bottom: 0.25rem; }
+li strong { color: var(--fg); font-weight: 600; }
+li:last-child { margin-bottom: 0; }
+
+/* Sub-step list (arrow style) */
+.sub-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.sub-steps li {
+  font-size: 0.875rem;
+  padding-left: 1.1rem;
+  position: relative;
+  color: var(--fg-2);
+  margin: 0;
+}
+.sub-steps li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+  top: 0.18em;
+}
+.sub-steps li strong { color: var(--fg); font-weight: 600; }
+
+/* Callout boxes */
+.callout {
+  margin-top: 0.65rem;
+  border-radius: 5px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.callout .callout-hd {
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+.callout p { font-size: 0.85rem; margin: 0; color: inherit; }
+.callout.info {
+  background: var(--accent-pale);
+  border-left: 3px solid var(--accent);
+  color: var(--accent);
+}
+.callout.info p { color: var(--fg); }
+.callout.warn {
+  background: var(--amber-pale);
+  border-left: 3px solid var(--amber);
+  color: var(--amber);
+}
+.callout.warn p { color: var(--fg); }
+.callout.ok {
+  background: var(--green-pale);
+  border-left: 3px solid var(--green);
+  color: var(--green);
+}
+.callout.ok p { color: var(--fg); }
+
+/* Math callout */
+.math-box {
+  background: var(--surface-alt);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+}
+.math-box .math-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin-bottom: 0.5rem;
+}
+.math-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+  flex-wrap: wrap;
+}
+.math-row:last-child { margin-bottom: 0; }
+.math-var {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fg);
+  min-width: 5rem;
+}
+.math-eq {
+  color: var(--fg-2);
+  font-size: 0.8rem;
+  flex: 1;
+  min-width: 0;
+}
+.math-eq code {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+</style>
+
+<header class="page-header">
+  <p class="eyebrow">Lesson 1.3.7 · Days 1–2 · Fusion 360</p>
+  <h1>Protective Case CAD Workflow</h1>
+  <p class="page-sub">Work through these steps in order. Finish the design questions before opening Fusion 360.</p>
+</header>
+
+<div class="ref-strip">
+  <h2>Key Numbers — FDM 3D Printing</h2>
+  <div class="ref-grid">
+    <div class="ref-item">
+      <span class="ref-label">Object clearance</span>
+      <span class="ref-val">+0.5 mm</span>
+      <span class="ref-note">per side, object to case wall</span>
+    </div>
+    <div class="ref-item">
+      <span class="ref-label">Wall thickness</span>
+      <span class="ref-val">2.0 mm</span>
+      <span class="ref-note">minimum; 2.5 mm for high-stress parts</span>
+    </div>
+    <div class="ref-item">
+      <span class="ref-label">Lid lip clearance</span>
+      <span class="ref-val">0.3 mm</span>
+      <span class="ref-note">per side, lip to base opening</span>
+    </div>
+    <div class="ref-item">
+      <span class="ref-label">Lip height</span>
+      <span class="ref-val">3–4 mm</span>
+      <span class="ref-note">enough to hold without being too tight</span>
+    </div>
+    <div class="ref-item">
+      <span class="ref-label">Max overhang</span>
+      <span class="ref-val">45°</span>
+      <span class="ref-note">steeper angles need support material</span>
+    </div>
+    <div class="ref-item">
+      <span class="ref-label">Min feature size</span>
+      <span class="ref-val">1.5 mm</span>
+      <span class="ref-note">anything smaller may not print cleanly</span>
+    </div>
+  </div>
+</div>
+
+<div class="steps">
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">01</span>
+    <div class="step-body">
+      <p class="step-phase">Before Fusion — Plan</p>
+      <h2 class="step-title">Measure your object</h2>
+      <p>Use the dial caliper. Measure at the widest point in each direction — include any buttons, ports, or raised features that stick out.</p>
+      <ul>
+        <li><strong>Length</strong> (longest dimension): _____ mm</li>
+        <li><strong>Width</strong>: _____ mm</li>
+        <li><strong>Height</strong>: _____ mm</li>
+      </ul>
+      <div class="callout warn">
+        <div class="callout-hd">Measure at the widest point</div>
+        <p>If your object has a bump or raised label, the case has to clear it. Measure there, not at the average.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">02</span>
+    <div class="step-body">
+      <p class="step-phase">Before Fusion — Plan</p>
+      <h2 class="step-title">Decide on your case design</h2>
+      <p>Answer these questions before you model anything.</p>
+      <ul>
+        <li>Is the lid flat or does it follow the object's shape?</li>
+        <li>How does it open — straight off, or hinged?</li>
+        <li>Does the object need to be visible through the lid?</li>
+        <li>Will you add any branding, grip texture, or access holes?</li>
+      </ul>
+      <p><strong>Sketch both parts on paper</strong> — the base (cup that holds the object) and the lid. Label which features go on which part.</p>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">03</span>
+    <div class="step-body">
+      <p class="step-phase">Before Fusion — Calculate</p>
+      <h2 class="step-title">Calculate your case dimensions</h2>
+      <p>This step prevents the most common failure — printing a case that doesn't fit. Do the math now, before you sketch anything.</p>
+
+      <div class="math-box">
+        <div class="math-title">Base — outer dimensions (what you'll sketch)</div>
+        <div class="math-row">
+          <span class="math-var">Outer W</span>
+          <span class="math-eq">= Object_W <code>+ 5.0 mm</code> &nbsp;(1 mm clearance + 2 mm walls × 2)</span>
+        </div>
+        <div class="math-row">
+          <span class="math-var">Outer L</span>
+          <span class="math-eq">= Object_L <code>+ 5.0 mm</code></span>
+        </div>
+        <div class="math-row">
+          <span class="math-var">Extrude H</span>
+          <span class="math-eq">= Object_H <code>+ 2.5 mm</code> &nbsp;(0.5 mm clearance + 2 mm floor)</span>
+        </div>
+      </div>
+
+      <div class="math-box" style="margin-top:0.5rem">
+        <div class="math-title">Lid lip — outer dimensions (fits inside the base opening)</div>
+        <div class="math-row">
+          <span class="math-var">Lip W</span>
+          <span class="math-eq">= Object_W <code>+ 0.4 mm</code> &nbsp;(inner cavity − 0.6 mm fit clearance)</span>
+        </div>
+        <div class="math-row">
+          <span class="math-var">Lip L</span>
+          <span class="math-eq">= Object_L <code>+ 0.4 mm</code></span>
+        </div>
+        <div class="math-row">
+          <span class="math-var">Lip H</span>
+          <span class="math-eq">= <code>3.0 mm</code></span>
+        </div>
+      </div>
+
+      <div class="callout info" style="margin-top:0.65rem">
+        <div class="callout-hd">Why Shell gives you 2× wall thickness</div>
+        <p>When you Shell with 2 mm, Fusion adds 2 mm of wall on every side. Outer W − (2 mm + 2 mm) = Inner W. So if your outer sketch is Object_W + 5 mm, the inner cavity is exactly Object_W + 1 mm — half a millimeter clearance on each side. ✓</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">04</span>
+    <div class="step-body">
+      <p class="step-phase">In Fusion 360 — Setup</p>
+      <h2 class="step-title">Set up your file</h2>
+      <ul class="sub-steps">
+        <li>File → <strong>New Design</strong></li>
+        <li>Browser: right-click <strong>Components</strong> → New Component → name it <strong>"Base"</strong></li>
+        <li>Add a second component → name it <strong>"Lid"</strong></li>
+        <li>Right-click Base → <strong>Activate</strong> (the radio button next to it turns blue)</li>
+        <li>Inspect → <strong>Change Active Units</strong> → Millimeters</li>
+      </ul>
+      <div class="callout warn">
+        <div class="callout-hd">Always check which component is active</div>
+        <p>If the wrong component is active, your geometry goes into the wrong part. Before every sketch, glance at the browser to confirm.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">05</span>
+    <div class="step-body">
+      <p class="step-phase">In Fusion 360 — Base</p>
+      <h2 class="step-title">Model the base</h2>
+      <ul class="sub-steps">
+        <li>Create Sketch on the <strong>Top plane</strong></li>
+        <li>Use <strong>Center Rectangle</strong> — sketch from the origin for symmetry</li>
+        <li>Sketch the outer profile: <strong>Outer W × Outer L</strong> from Step 3</li>
+        <li>Add dimensional constraints — confirm the sketch turns <strong>fully black</strong> (no blue lines)</li>
+        <li>Finish Sketch → <strong>Extrude</strong> upward by your Extrude H from Step 3</li>
+        <li>Modify → <strong>Shell</strong> → select the top face → set wall thickness to <strong>2.0 mm</strong></li>
+      </ul>
+      <div class="callout ok">
+        <div class="callout-hd">After Shell</div>
+        <p>You should have a box open at the top with uniform 2 mm walls and a 2 mm floor. The interior cavity dimensions should be Object_W + 1 mm and Object_L + 1 mm. Verify this with Inspect → Measure.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">06</span>
+    <div class="step-body">
+      <p class="step-phase">In Fusion 360 — Lid</p>
+      <h2 class="step-title">Model the lid</h2>
+      <ul class="sub-steps">
+        <li>Browser: right-click <strong>Lid</strong> → Activate</li>
+        <li>Create Sketch on the <strong>Top plane</strong> (same plane as the base)</li>
+        <li>Sketch the outer profile: <strong>same Outer W × Outer L</strong> as the base</li>
+        <li>Finish Sketch → Extrude <strong>upward</strong> by 2 mm (lid thickness)</li>
+        <li>Create a new sketch on the <strong>bottom face</strong> of the lid</li>
+        <li>Sketch the lip: <strong>Lip W × Lip L</strong> from Step 3 — centered</li>
+        <li>Finish Sketch → Extrude <strong>downward</strong> by 3 mm</li>
+      </ul>
+      <div class="callout info">
+        <div class="callout-hd">Tip: Use Offset for the lip sketch</div>
+        <p>In the lip sketch, use Sketch → Offset to shrink the outer profile by the exact clearance amount instead of re-entering dimensions. Offset inward by <code>0.3 mm</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">07</span>
+    <div class="step-body">
+      <p class="step-phase">In Fusion 360 — Verify</p>
+      <h2 class="step-title">Check the fit</h2>
+      <ul class="sub-steps">
+        <li>Make sure both Base and Lid are <strong>visible</strong> (eye icon in browser)</li>
+        <li>Position the lid above the base — in the browser, right-click Lid → <strong>Move/Copy</strong></li>
+        <li>Move it down so the lip sits inside the base opening — do they visually align?</li>
+        <li>Use <strong>Inspect → Measure</strong> to confirm the clearance gap between the lip and the base wall is ~0.3 mm</li>
+      </ul>
+      <div class="callout warn">
+        <div class="callout-hd">Clearance looks like interference in the view</div>
+        <p>A 0.3 mm gap is too small to see clearly — use Inspect → Measure, not the eyeball test. If your gap is 0 or negative, the parts won't fit.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 8 -->
+  <div class="step">
+    <span class="step-num" aria-hidden="true">08</span>
+    <div class="step-body">
+      <p class="step-phase">Before Printing — Final Check</p>
+      <h2 class="step-title">Printability check</h2>
+      <p>Answer each question before sending to the printer.</p>
+      <ul>
+        <li><strong>Walls ≥ 2 mm?</strong> Check your thinnest section. Thinner walls may snap.</li>
+        <li><strong>No overhangs &gt; 45°?</strong> Steep overhangs print poorly without support. Redesign or add a chamfer.</li>
+        <li><strong>Flat bottom face?</strong> The print must have a face that lies flat on the print bed.</li>
+        <li><strong>No floating geometry?</strong> Every feature must connect to the main body.</li>
+        <li><strong>File saved and named?</strong> Lastname_CasePart.f3d format.</li>
+      </ul>
+      <div class="callout ok">
+        <div class="callout-hd">All checks pass?</div>
+        <p>Export each component as a separate STL (right-click component in browser → Save As Mesh) and share with your teacher for print review.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
